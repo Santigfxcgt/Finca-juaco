@@ -1,0 +1,211 @@
+// =======================================================
+// Prisma Schema: Finca La Colmena de Don Juaco
+// Boutique Hotel & Agritourism Platform
+// =======================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------
+// Enums
+// -------------------------------------------------------
+
+enum DocumentType {
+  CC          // Cédula de Ciudadanía
+  CE          // Cédula de Extranjería
+  PASSPORT    // Pasaporte
+  NIT         // Número de Identificación Tributaria
+  OTHER
+}
+
+enum ReservationStatus {
+  PENDING_PAYMENT // Reservation created, 30-60 min payment hold
+  CONFIRMED       // Payment verified, room guaranteed
+  CHECKED_IN      // Guest has arrived and checked in
+  CHECKED_OUT     // Stay completed
+  CANCELLED       // Expired or cancelled by guest/admin
+}
+
+enum PaymentChannel {
+  NEQUI
+  DAVIPLATA
+  BANCOLOMBIA_TRANSFER
+  CREDIT_CARD
+  CASH_ON_SITE
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// -------------------------------------------------------
+// Models
+// -------------------------------------------------------
+
+model Room {
+  id                 String         @id @default(cuid())
+  roomNumber         String         @unique
+  name               String
+  slug               String         @unique
+  description        String         @db.Text
+  capacity           Int            @default(2)
+  basePrice          Decimal        @db.Decimal(12, 2)
+  outOfService       Boolean        @default(false)
+  outOfServiceReason String?        @db.Text
+  bedType            String         // e.g. "King Size + Sofá Cama"
+  viewType           String         // e.g. "Valle Cafetero & Apiario"
+  squareMeters       Int            @default(45)
+  amenities          String[]       // Array of tags (e.g. ["Jacuzzi privado", "Balcón", "WiFi Starlink", "Desayuno incluido"])
+  images             String[]       // Photo gallery URLs
+  sortOrder          Int            @default(0)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  reservations       Reservation[]
+
+  @@index([outOfService])
+  @@index([capacity])
+  @@index([basePrice])
+}
+
+model Guest {
+  id                 String         @id @default(cuid())
+  documentType       DocumentType   @default(CC)
+  documentNumber     String
+  fullName           String
+  email              String
+  phone              String
+  nationality        String         @default("Colombiana")
+  emergencyContact   String?
+  notes              String?        @db.Text
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  reservations       Reservation[]
+
+  @@unique([documentType, documentNumber])
+  @@index([documentNumber])
+  @@index([email])
+  @@index([phone])
+}
+
+model Reservation {
+  id                  String            @id @default(cuid())
+  reservationCode     String            @unique // e.g. "COL-2026-7841"
+  roomId              String
+  guestId             String
+  checkInDate         DateTime          @db.Date
+  checkOutDate        DateTime          @db.Date
+  adults              Int               @default(2)
+  children            Int               @default(0)
+  nightlyRate         Decimal           @db.Decimal(12, 2)
+  seasonalMultiplier  Decimal           @default(1.00) @db.Decimal(4, 2)
+  subtotal            Decimal           @db.Decimal(12, 2)
+  taxAmount           Decimal           @default(0.00) @db.Decimal(12, 2)
+  totalAmount         Decimal           @db.Decimal(12, 2)
+  status              ReservationStatus @default(PENDING_PAYMENT)
+  paymentHoldDeadline DateTime
+  specialRequests     String?           @db.Text
+  cancellationReason  String?           @db.Text
+  checkedInAt         DateTime?
+  checkedOutAt        DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  room                Room              @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  guest               Guest             @relation(fields: [guestId], references: [id], onDelete: Restrict)
+  transactions        Transaction[]
+
+  // Critical performance indexes
+  @@index([checkInDate, checkOutDate])
+  @@index([status])
+  @@index([roomId])
+  @@index([guestId])
+  @@index([reservationCode])
+  @@index([paymentHoldDeadline])
+}
+
+model Transaction {
+  id                 String             @id @default(cuid())
+  reservationId      String
+  paymentChannel     PaymentChannel
+  amount             Decimal            @db.Decimal(12, 2)
+  referenceCode      String
+  proofSlipUrl       String?            @db.Text
+  verificationStatus VerificationStatus @default(PENDING)
+  rejectionReason    String?            @db.Text
+  verifiedAt         DateTime?
+  verifiedBy         String?            // Admin user identifier
+  notes              String?            @db.Text
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  reservation        Reservation        @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId])
+  @@index([verificationStatus])
+  @@index([paymentChannel])
+  @@index([referenceCode])
+}
+
+model SeasonRate {
+  id                 String         @id @default(cuid())
+  name               String         // e.g. "Semana Santa", "Temporada Alta Diciembre-Enero", "Puentes Festivos"
+  startDate          DateTime       @db.Date
+  endDate            DateTime       @db.Date
+  multiplier         Decimal        @default(1.30) @db.Decimal(4, 2)
+  minimumStayNights  Int            @default(2)
+  isActive           Boolean        @default(true)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([startDate, endDate])
+  @@index([isActive])
+}
+
+model Setting {
+  id                         String    @id @default("colmena_settings")
+  propertyName               String    @default("Finca La Colmena de Don Juaco")
+  tagline                    String    @default("Hotel Boutique & Reserva Agroturística")
+  phone                      String    @default("+57 314 892 4510")
+  email                      String    @default("reservas@lacolmenadedonjuaco.com")
+  whatsappNumber             String    @default("573148924510")
+  locationAddress            String    @default("Vereda El Agrado, Km 4 Vía Panaca, Quindío, Colombia")
+  checkInTime                String    @default("15:00")
+  checkOutTime               String    @default("11:00")
+  defaultMinStayNights       Int       @default(1)
+  paymentHoldMinutes         Int       @default(45)
+  bancolombiaAccountType     String    @default("Ahorros")
+  bancolombiaAccountNumber   String    @default("482-901842-19")
+  bancolombiaHolderName      String    @default("Don Joaquín Restrepo - Finca La Colmena")
+  bancolombiaNit             String    @default("79.482.190-4")
+  nequiNumber                String    @default("3148924510")
+  daviplataNumber            String    @default("3148924510")
+  updatedAt                  DateTime  @updatedAt
+}
+
+model ChatWidgetFaq {
+  id                          String    @id @default(cuid())
+  category                    String    // "ubicacion", "apicultura", "pagos", "mascotas", "alimentacion"
+  keywords                    String[]  // ["llegar", "carro", "waze", "vía"]
+  userQuestion                String
+  botAnswer                   String    @db.Text
+  quickReplies                String[]  // Next options
+  nextNodeId                  String?
+  requiresWhatsAppEscalation  Boolean   @default(false)
+  sortOrder                   Int       @default(0)
+  isActive                    Boolean   @default(true)
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}

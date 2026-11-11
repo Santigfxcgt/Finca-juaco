@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 180" width="540" height="180">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&amp;family=Plus+Jakarta+Sans:wght@800&amp;display=swap');
+      .bg {
+        fill: #FFFFFF;
+        stroke: #330757;
+        stroke-width: 4;
+        stroke-opacity: 0.15;
+      }
+      .brand-turim {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 72px;
+        font-weight: 800;
+        fill: #005400;
+        letter-spacing: 1px;
+      }
+      .brand-dot {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        font-size: 68px;
+        font-weight: 800;
+        fill: #330757;
+      }
+      .brand-juaco {
+        font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+        font-size: 70px;
+        font-weight: 800;
+        fill: #330757;
+        letter-spacing: -0.5px;
+      }
+    </style>
+  </defs>
+  <!-- Background panel with generous internal margin and rounded corners -->
+  <rect class="bg" x="3" y="3" width="534" height="174" rx="26"/>
+  <!-- Centered logo typography with generous spacing from the box border -->
+  <g transform="translate(48, 118)">
+    <text x="0" y="0" class="brand-turim">TURIM</text>
+    <text x="282" y="-4" class="brand-dot">.</text>
+    <text x="306" y="0" class="brand-juaco">Juaco</text>
+  </g>
+</svg>

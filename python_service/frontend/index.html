@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de Hotel | Confirmación Inmediata</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="booking-wrapper">
+        <header class="header">
+            <h2>TURIM . Juaco • Finca La Colmena</h2>
+            <p>Complete el formulario para confirmar su reserva y recibir el comprobante por correo.</p>
+        </header>
+
+        <form id="booking-form" class="booking-form" novalidate>
+            <div class="form-group">
+                <label for="fullName">Nombre Completo *</label>
+                <input type="text" id="fullName" name="fullName" placeholder="Ej. Carolina Herrera" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Correo Electrónico *</label>
+                <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col">
+                    <label for="checkIn">Fecha de Check-in *</label>
+                    <input type="date" id="checkIn" name="checkIn" required>
+                </div>
+                <div class="form-group col">
+                    <label for="checkOut">Fecha de Check-out *</label>
+                    <input type="date" id="checkOut" name="checkOut" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="roomType">Tipo de Habitación *</label>
+                <select id="roomType" name="roomType" required>
+                    <option value="" disabled selected>Seleccione una opción...</option>
+                    <option value="Sencilla">Habitación Sencilla</option>
+                    <option value="Doble">Habitación Doble</option>
+                    <option value="Suite">Suite Campestre Familiar</option>
+                </select>
+            </div>
+
+            <div id="status-box" class="status-box" style="display: none;"></div>
+
+            <button type="submit" id="submit-btn" class="submit-btn">
+                Confirmar Reserva
+            </button>
+        </form>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
